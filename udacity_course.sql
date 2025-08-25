@@ -16,6 +16,94 @@ select id, account_id, total_amt_usd
 from orders
 order by account_id, total_amt_usd desc;
 
+
+--FROM BIGQUERY
+
+-- **Warm Up 1**
+
+--1: Earliest year of purchase
+
+    select min(Year) as earliest_year from prework.sales;
+
+ --2. What is the average customer age per year? Order the years in ascending order.
+
+select * from prework.sales;
+
+ select Year, avg(Customer_Age) as average_age
+ from prework.sales
+ group by 1
+ order by 1;
+
+--Return all clothing purchases from September 2015 where the cost was at least $70.
+
+select *
+from prework.sales
+where product_Category = 'Clothing'
+  and cost >= 70
+  and month ='September'
+  and year > 2015;
+
+--4. What are all the different types of product categories that were sold from 2014 to 2016 in France?
+
+select distinct product_category
+from prework.sales
+where year between 2014 and 2016
+and country='France';
+
+--5. Within each product category and age group (combined), what is the average order quantity and total profit?
+
+select product_category, age_group,avg(order_quantity) as Avgorderqty, sum(profit) as totalprofit
+from prework.sales
+group by product_category, age_group;
+
+--**Warm Up 2**
+
+--1. Which product category has the highest number of orders among 31-year olds? Return only the top product category.
+
+select product_category, sum(Order_Quantity)
+from prework.sales
+where Customer_Age = 31
+group by 1
+order by 2 desc
+limit 1;
+
+--2. Of female customers in the U.S. who purchased bike-related products in 2015, what was the average revenue?
+
+select distinct Product_Category
+from prework.sales;
+
+select avg(revenue)
+from prework.sales
+where customer_gender = 'F'
+and product_category like '%Bike%'
+and year = 2015
+and country='United States'
+
+--3. Categorize all purchases into bike vs. non-bike related purchases. How many purchases were there in each group among male customers in 2016?
+
+select (case when Product_Category like '%Bike%'then 'Biker' else 'Non-Biker' end) as category, count(*) as count
+from prework.sales
+where Customer_Gender='M'
+and year = 2016
+group by 1;
+
+--4. Among people who purchased socks or caps (use `sub_category`), what was the average profit earned per country per year, ordered by highest average profit to lowest average profit?
+
+select country, year, avg(profit) as profitavg
+from prework.sales
+where sub_category in('Socks','Caps')
+group by 1,2
+order by 3 desc;
+
+--5. For male customers who purchased the AWC Logo Cap (use `product`), use a window function to order the purchase dates from oldest to most recent within each gender.
+select Customer_Gender, Date,
+row_number() over (partition by Customer_Gender order by Date desc) as purchase_orders
+from prework.sales
+where customer_gender ='M' and product ='AWC Logo Cap';
+
+
+
+
 --Operator	Condition	SQL Example
 =, !=, <, <=, >, >=	Standard numerical operators	col_name != 4
 BETWEEN … AND …	Number is within range of two values (inclusive)	col_name BETWEEN 1.5 AND 10.5
