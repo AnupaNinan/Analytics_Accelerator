@@ -101,9 +101,67 @@ row_number() over (partition by Customer_Gender order by Date desc) as purchase_
 from prework.sales
 where customer_gender ='M' and product ='AWC Logo Cap';
 
+--UDACITY COURSE - SUBQUERY QUESTIONS
+------------------------------------
+-- 5.9 SUBQUERY MANIA
+--Provide the name of the sales_rep in each region with the largest amount of total_amt_usd sales.
+
+with sub as
+(select s.name as salesrep_name, r.name as region, sum(o.total_amt_usd) as total
+from region as r
+join sales_reps as s
+on r.id = s.region_id
+join accounts as a
+on s.id = a.sales_rep_id
+join orders as o
+on a.id= o.account_id
+group by 1,2
+order by 3 desc)
+
+select t2.salesrep_name, t1.region, t1.maxtotal
+from
+(select region, max(total) as maxtotal
+from sub
+group by 1) t1
+join 
+sub as t2
+on t1.region = t2.region and t1.maxtotal = t2.total;
+
+--For the region with the largest (sum) of sales total_amt_usd, how many total (count) orders were placed?
+
+with sub1 as
+(select r.name as region, sum(o.total_amt_usd) as total, count(o.total_amt_usd) as orderc
+from region as r
+join sales_reps as s
+on r.id= s.region_id
+join accounts as a
+on s.id=a.sales_rep_id
+join orders as o
+on a.id=o.account_id
+group by 1),
+
+sub2 as
+(select region, max(total) as total
+from sub1
+ group by 1
+order by total desc
+limit 1)
+
+select r.name,count(*) as ordercount
+from orders as o
+join accounts as a
+on o.account_id = a.id
+join sales_reps as s
+on s.id=a.sales_rep_id
+join region as r
+on r.id=s.region_id 
+group by 1
+having sum(o.total_amt_usd) =
+(select total from sub2)
 
 
 
+    
 --Operator	Condition	SQL Example
 =, !=, <, <=, >, >=	Standard numerical operators	col_name != 4
 BETWEEN … AND …	Number is within range of two values (inclusive)	col_name BETWEEN 1.5 AND 10.5
