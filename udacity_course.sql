@@ -159,7 +159,67 @@ group by 1
 having sum(o.total_amt_usd) =
 (select total from sub2)
 
+--3.How many accounts had more total purchases than the account name which has bought the most standard_qty paper throughout their lifetime as a customer?
+with sub1 as 
+(select a.name, sum(o.standard_qty) as totalqty, sum(o.total)as total
+from accounts as a
+join orders as o
+on a.id = o.account_id
+group by 1
+order by 2 desc
+limit 1)
 
+select count(*) as accountcnt from 
+(select a.name, sum(total)
+from accounts as a
+join orders as o
+on a.id=o.account_id
+group by 1
+having sum(total) >
+(select total from sub1)) as sub2
+
+--4. For the customer that spent the most (in total over their lifetime as a customer) total_amt_usd, how many web_events did they have for each channel?
+
+with sub1 as
+(select a.id as id, sum(total_amt_usd)
+from accounts as a
+join orders as o
+on a.id = o.account_id
+group by 1
+order by 2 desc
+limit 1)
+
+select a.name, w.channel, count(*) as webcount
+from web_events as w
+join accounts as a
+on w.account_id = a.id
+where w.account_id = (select id from sub1)
+group by 1,2
+order by 3 desc
+
+--5. What is the lifetime average amount spent in terms of total_amt_usd for the top 10 total spending accounts?
+
+select round(avg(total),2) as total from
+(select a.id as id, a.name as name, sum(o.total_amt_usd) as total
+from orders as o
+join accounts as a
+on a.id=o.account_id
+group by 1,2
+order by 3 desc
+limit 10) as sub1
+
+
+
+--6. What is the lifetime average amount spent in terms of total_amt_usd, including only the companies that spent more per order, on average, than the average of all orders.
+
+    
+select avg(total) as average from(
+select account_id, avg(total_amt_usd) as total
+  from orders as o
+  group by account_id
+having avg(total_amt_usd) >
+(select avg(total_amt_usd) as average
+from orders))
 
     
 --Operator	Condition	SQL Example
